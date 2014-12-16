@@ -300,9 +300,9 @@ int calculate_averages() {
   float qpsf;
   char st_time[10];
   time_t now = time(0);
-  u_int types[] = {1,2,5,6,12,15,28,38,252,255,0};
+  u_int types[] = {1,2,5,6,12,15,16,28,38,39,252,255,0};
   char *target;
-  char *names[] = {"A","NS","CNAME","SOA","PTR","MX","AAAA","A6","AXFR","ANY",""};
+  char *names[] = {"A","NS","CNAME","SOA","PTR","MX","TXT","AAAA","A6","DNAME","AXFR","ANY",""};
   struct tm *raw_time = localtime(&now);
   snprintf(st_time, 9, "%02d:%02d:%02d",raw_time->tm_hour,raw_time->tm_min,raw_time->tm_sec);
 
@@ -324,11 +324,11 @@ int calculate_averages() {
           // display detail to either syslog or stdout
           if ( option_b ) {
             if ( ! option_v ) {
-              printf("[%s] source [%s] - %u qps\n",st_time,inet_ntoa(bb[i]->ip_addr),bb[i]->qps);
+              printf("[%s] source %s qps %u \n",st_time,inet_ntoa(bb[i]->ip_addr),bb[i]->qps);
               fflush(stdout);
             }
             else {
-              printf("[%s] source [%s] - %u qps tcp : %u qps udp ",st_time,inet_ntoa(bb[i]->ip_addr),
+              printf("[%s] source %s tcp_qps %u udp_qps %u ",st_time,inet_ntoa(bb[i]->ip_addr),
               (u_int)ceil( ((float)bb[i]->tcp_count/delta)),
               (u_int)ceil( ((float)bb[i]->udp_count/delta)));
 
@@ -336,7 +336,7 @@ int calculate_averages() {
                 for (j=0;types[j];j++) {
                   qps = (u_int)ceil((float)bb[i]->qstats[types[j]]/delta);
                   if (qps){
-                    printf("[%u qps %s] ",qps,names[j]);
+                    printf("[%s %u] ",names[j],qps);
                   }
                 }
               }
@@ -350,20 +350,20 @@ int calculate_averages() {
 
               // display appropriate level of detail via syslog
               if ( ! option_v ) {
-                syslog(LOG_NOTICE,"source [%s] - %u qps\n",inet_ntoa(bb[i]->ip_addr),bb[i]->qps);
+                syslog(LOG_NOTICE,"source %s qps %u \n",inet_ntoa(bb[i]->ip_addr),bb[i]->qps);
               }
               else if (option_v > 1) {
                 target = (char *)malloc(sizeof(char)*MAXSYSLOG);
                 newsize = MAXSYSLOG;
-                cursize = snprintf(target,newsize,"source [%s] - %u tcp qps : %u udp qps ",inet_ntoa(bb[i]->ip_addr),
-                (u_int)ceil( ((float)bb[i]->tcp_count/delta)),				
+                cursize = snprintf(target,newsize,"source %s tcp_qps %u udp_qps %u ",inet_ntoa(bb[i]->ip_addr),
+                (u_int)ceil( ((float)bb[i]->tcp_count/delta)),
                 (u_int)ceil( ((float)bb[i]->udp_count/delta)));
                 newsize-=cursize;
-	
+
                 for (j=0;types[j];j++ ) {
                   qps = (u_int)ceil(((float)bb[i]->qstats[types[j]]/delta));
                   if ( ( qps > 0)  && ( newsize > 1 ) ) {
-                    cursize = snprintf(target+(MAXSYSLOG-newsize),newsize,"[%u qps %s] ",qps,names[j]);
+                    cursize = snprintf(target+(MAXSYSLOG-newsize),newsize,"[%s %u] ",names[j],qps);
                     newsize-=cursize;
                   }
                 }
@@ -374,7 +374,7 @@ int calculate_averages() {
                 free(target);
               }
               else {
-                syslog(LOG_NOTICE,"source [%s] - %u tcp qps - %u udp qps\n",inet_ntoa(bb[i]->ip_addr),
+                syslog(LOG_NOTICE,"source %s tcp_qps %u udp_qps %u \n",inet_ntoa(bb[i]->ip_addr),
                 (u_int)ceil( ((float)bb[i]->tcp_count/delta)),
                 (u_int)ceil( ((float)bb[i]->udp_count/delta)));
               }
@@ -385,21 +385,21 @@ int calculate_averages() {
           }
         }
       }
-    }		
+    }
   }
-	
+
   // 'mark stats' if required and it is time
   delta = (u_int)(now - bb[totals]->first_packet);
   if ( (option_m > 0)&&(delta > 1)&&(delta >= option_m) ) {
 
-    // handle bindsnap mode 
+    // handle bindsnap mode
     if (option_b) {
-      printf("[%s] totals - %3.2f qps tcp : %3.2f qps udp ",st_time, ((float)bb[totals]->tcp_count/delta),((float)bb[totals]->udp_count/delta));
+      printf("[%s] totals tcp_qps %3.2f udp_qps %3.2f ",st_time, ((float)bb[totals]->tcp_count/delta),((float)bb[totals]->udp_count/delta));
       if (option_v) {
         for (j=0;types[j];j++) {
           qpsf = ((float)bb[totals]->qstats[types[j]]/delta);
           if (qpsf > 0){
-            printf("[%3.2f qps %s] ",qpsf,names[j]);
+            printf("[%s %3.2f] ",names[j],qpsf);
           }
         }
       }
@@ -411,15 +411,15 @@ int calculate_averages() {
       if (option_v) {
         target = (char *)malloc(sizeof(char)*MAXSYSLOG);
         newsize = MAXSYSLOG;
-        cursize = snprintf(target,newsize,"[totals] - %3.2f tcp qps : %3.2f udp qps ",
-        ((float)bb[totals]->tcp_count/delta),				
+        cursize = snprintf(target,newsize,"totals tcp_qps %3.2f udp_qps %3.2f ",
+        ((float)bb[totals]->tcp_count/delta),
         ((float)bb[totals]->udp_count/delta));
         newsize-=cursize;
-	
+
         for (j=0;types[j];j++ ) {
           qpsf = ((float)bb[totals]->qstats[types[j]]/delta);
           if ( ( qpsf > 0)  && ( newsize > 1 ) ) {
-            cursize = snprintf(target+(MAXSYSLOG-newsize),newsize,"[%3.2f qps %s] ",qpsf,names[j]);
+            cursize = snprintf(target+(MAXSYSLOG-newsize),newsize,"[%s %3.2f] ",names[j],qpsf);
             newsize-=cursize;
           }
         }
@@ -430,11 +430,11 @@ int calculate_averages() {
         free(target);
       }
       else {
-        syslog(LOG_NOTICE,"[totals] - %3.2f tcp qps : %3.2f udp qps\n",
+        syslog(LOG_NOTICE,"totals tcp_qps %3.2f udp_qps %3.2f \n",
         ((float)bb[totals]->tcp_count/delta),
         ((float)bb[totals]->udp_count/delta));
       }
-    }	
+    }
     scour_bucket(totals);
   }
   return 1;
