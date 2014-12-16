@@ -64,12 +64,12 @@ rhstatus() {
 }
 
 rhstatus_q() {
-    rh_status >/dev/null 2>&1
+    rhstatus >/dev/null 2>&1
 }
 
 case "$1" in
     start)
-        rh_status_q && exit 0
+        rhstatus_q && exit 0
         start
 	    ;;
     stop)
