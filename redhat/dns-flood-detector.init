@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-#		Modified for CentOS
-#		by xingxing <itxx00@gmail.com>.
+#              Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#              Modified for CentOS
+#              by xingxing <itxx00@gmail.com>.
 #
 # chkconfig: 2345 86 14
 # description: start and stop the dns-flood-detector daemon. \
@@ -28,12 +28,9 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/bin/dns-flood-detector
 NAME=dns-flood-detector
-DESC=dns-flood-detector
 PID_FILE=/var/run/$NAME.pid
 lockfile=/var/lock/subsys/$NAME
 RETVAL=0
-
-set -e
 
 start() {
     [ -x $DAEMON ] || exit 5
@@ -60,7 +57,7 @@ stop() {
 }
 
 rhstatus() {
-    status -p "$PIDFILE" -l $NAME $DAEMON
+    status -p "$PID_FILE" -l $lockfile $DAEMON
 }
 
 rhstatus_q() {
@@ -71,19 +68,18 @@ case "$1" in
     start)
         rhstatus_q && exit 0
         start
-	    ;;
+        ;;
     stop)
         if ! rhstatus_q; then
             rm -f $lockfile
             exit 0
         fi
         stop
-	    ;;
+        ;;
     restart|force-reload)
-	    echo -n "Restarting $DESC: "
         stop
         start
-	    ;;
+        ;;
     status)
         rhstatus
         RETVAL=$?
@@ -92,9 +88,9 @@ case "$1" in
         fi
         ;;
     *)
-	    echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
         RETVAL=2
-	    ;;
+        ;;
 esac
 
 exit $RETVAL
