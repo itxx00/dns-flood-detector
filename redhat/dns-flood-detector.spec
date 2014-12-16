@@ -38,7 +38,7 @@ gzip redhat/dns-flood-detector.8
 install -D -m 0755 dns_flood_detector $RPM_BUILD_ROOT%{_bindir}/dns-flood-detector
 install -D -m 0644 redhat/dns-flood-detector.sysconfig $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/dns-flood-detector
 install -D -m 0755 redhat/dns-flood-detector.init $RPM_BUILD_ROOT%{_initrddir}/dns-flood-detector
-install -D -m 0755 redhat/dns-flood-detector.rsyslog $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.d/dns-flood-detector.conf
+install -D -m 0644 redhat/dns-flood-detector.rsyslog $RPM_BUILD_ROOT%{_sysconfdir}/rsyslog.d/dns-flood-detector.conf
 install -D -m 0644 redhat/dns-flood-detector.8.gz $RPM_BUILD_ROOT%{_mandir}/man8/dns-flood-detector.8.gz
 
 %post
