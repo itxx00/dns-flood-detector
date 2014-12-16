@@ -1,0 +1,100 @@
+#!/bin/bash
+#
+#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#		Modified for CentOS
+#		by xingxing <itxx00@gmail.com>.
+#
+# chkconfig: 2345 86 14
+# description: start and stop the dns-flood-detector daemon. \
+#              detect abusive usage levels on high traffic nameservers.
+#
+
+### BEGIN INIT INFO
+# Provides: dns-flood-detector
+# Required-Start: $local_fs $network $remote_fs $syslog
+# Required-Stop: $local_fs $network $remote_fs $syslog
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: start and stop the dns-flood-detector daemon
+# Description:  detect abusive usage levels on high traffic nameservers
+### END INIT INFO
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+# pull in sysconfig settings
+[ -f /etc/sysconfig/dns-flood-detector ] && . /etc/sysconfig/dns-flood-detector
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/bin/dns-flood-detector
+NAME=dns-flood-detector
+DESC=dns-flood-detector
+PID_FILE=/var/run/$NAME.pid
+lockfile=/var/lock/subsys/$NAME
+RETVAL=0
+
+set -e
+
+start() {
+    [ -x $DAEMON ] || exit 5
+    echo -n $"Starting $NAME: "
+    daemon --pidfile="$PID_FILE" $DAEMON $DAEMON_OPTS
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        /sbin/pidof $NAME > $PID_FILE
+        touch $lockfile
+    fi
+    echo
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $NAME: "
+    killproc -p $PID_FILE $DAEMON
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        rm -f $PID_FILE
+        rm -f $lockfile
+    fi
+    echo
+}
+
+rhstatus() {
+    status -p "$PIDFILE" -l $NAME $DAEMON
+}
+
+rhstatus_q() {
+    rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        start
+	    ;;
+    stop)
+        if ! rhstatus_q; then
+            rm -f $lockfile
+            exit 0
+        fi
+        stop
+	    ;;
+    restart|force-reload)
+	    echo -n "Restarting $DESC: "
+        stop
+        start
+	    ;;
+    status)
+        rhstatus
+        RETVAL=$?
+        if [ $RETVAL -eq 3 ] && [ -f $lockfile ] ; then
+            RETVAL=2
+        fi
+        ;;
+    *)
+	    echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        RETVAL=2
+	    ;;
+esac
+
+exit $RETVAL
