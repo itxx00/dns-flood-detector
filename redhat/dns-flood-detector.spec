@@ -9,8 +9,8 @@ URL: http://www.adotout.com/
 Source0: http://www.adotout.com/dnsflood-%{version}.tgz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires: libpcap
-Requires: rsyslog
+BuildRequires: libpcap-devel
+Requires: rsyslog, libpcap
 Requires(post): chkconfig
 
 
