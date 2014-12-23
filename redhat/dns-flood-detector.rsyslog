@@ -1,1 +1,2 @@
 :programname, isequal, "dns_flood_detector"    /var/log/dns_flood_detector.log
+:programname, isequal, "dns_flood_detector"    ~
